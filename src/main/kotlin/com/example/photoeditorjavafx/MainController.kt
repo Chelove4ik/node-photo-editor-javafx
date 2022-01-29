@@ -1,15 +1,10 @@
 package com.example.photoeditorjavafx
 
+import javafx.event.ActionEvent
 import javafx.fxml.FXML
-import javafx.scene.Node
-import javafx.scene.control.Label
-import javafx.scene.control.ScrollBar
+import javafx.scene.control.MenuItem
 import javafx.scene.control.ScrollPane
-import javafx.scene.image.Image
-import javafx.scene.image.ImageView
 import javafx.scene.layout.AnchorPane
-import javafx.scene.layout.StackPane
-import javafx.scene.shape.CubicCurve
 
 class MainController {
     @FXML
@@ -27,7 +22,34 @@ class MainController {
         (mainSP.content as AnchorPane).children.add(c.mainNode)
     }
 
-    private fun initialize() {
+    @FXML
+    private fun createNodeFromStringIdInEvent(event: ActionEvent) {
+        createNodeFromString((event.source as MenuItem).id)
+    }
 
+    private fun createNodeFromString(str: String) {
+        val newNode: BaseNode? = when (str) {
+            "Float" -> FloatNode()
+            "Int" -> IntNode()
+            "String" -> StringNode()
+//            "Image" -> PrintNode()
+//            "AddText" -> PrintNode()
+//            "AddImage" -> PrintNode()
+//            "GrayFIlter" -> PrintNode()
+//            "Brightness" -> PrintNode()
+//            "Sepia" -> PrintNode()
+//            "InvertFilter" -> PrintNode()
+//            "BlurFilter" -> PrintNode()
+//            "TransformMove" -> PrintNode()
+//            "TransformScale" -> PrintNode()
+            "TransformRotate" -> PrintNode()
+            else -> null
+        }
+
+        if (newNode !== null) {
+            (mainSP.content as AnchorPane).children.add(newNode.mainNode)
+        } else {
+            // TODO мб сообщение об ошибке
+        }
     }
 }

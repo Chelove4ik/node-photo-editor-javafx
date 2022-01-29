@@ -9,12 +9,14 @@ import javafx.scene.input.MouseEvent
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.GridPane
 import javafx.scene.text.Text
-import java.io.Closeable
 
 const val STRING_TYPE: String = "String"
 const val FLOAT_TYPE: String = "Float"
 const val INT_TYPE: String = "Int"
 const val IMAGE_TYPE: String = "Image"
+
+const val INPUT: Boolean = true
+const val OUTPUT: Boolean = false
 
 abstract class BaseNode {
     @FXML
@@ -38,11 +40,10 @@ abstract class BaseNode {
     @FXML
     lateinit var outputGrid: GridPane
 
-    var input: BaseNode? = null
     val outputs = mutableListOf<BaseNode?>()
 
-    var inputConnector: Connector? = null
-    val outputConnectors = mutableListOf<Connector?>()
+    val inputConnectors = mutableListOf<Connector>()
+    val outputConnectors = mutableListOf<Connector>()
 
     abstract val content: Any
     var x: Double = 0.0
@@ -80,13 +81,14 @@ abstract class BaseNode {
             mainNode.layoutX = x
             mainNode.layoutY = y
 
-            inputConnector?.getBoundOnScene()?.let { tempBounds ->
-                inputConnector?.line?.endX = tempBounds.centerX
-                inputConnector?.line?.endY = tempBounds.centerY
+            for (inputConnector in inputConnectors) {
+                inputConnector.getBoundOnScene().let { tempBounds ->
+                    inputConnector.line?.endX = tempBounds.centerX
+                    inputConnector.line?.endY = tempBounds.centerY
+                }
             }
-
             for (outputConnector in outputConnectors) {
-                outputConnector?.getBoundOnScene()?.let { tempBounds ->
+                outputConnector.getBoundOnScene().let { tempBounds ->
                     outputConnector.line?.startX = tempBounds.centerX
                     outputConnector.line?.startY = tempBounds.centerY
                 }
@@ -95,23 +97,25 @@ abstract class BaseNode {
 
         removeBtn.addEventHandler(MouseEvent.MOUSE_CLICKED) {
             val scene = (mainNode.parent as AnchorPane)
-            input = null
-            scene.children.remove(inputConnector?.line)
-            inputConnector?.line = null
-            inputConnector?.to?.line = null
 
-            inputConnector?.to?.to = null
-            inputConnector = null
+            for (i in 0 until inputConnectors.size) {
+                scene.children.remove(inputConnectors[i].line)
+                inputConnectors[i].line = null
+                inputConnectors[i].to?.line = null
+                inputConnectors[i].to?.to = null
+                inputConnectors[i].to = null
+            }
+            inputConnectors.removeAll { true }
 
             outputs.removeAll { true }
 
             for (i in 0 until outputConnectors.size) {
-                scene.children.remove(outputConnectors[i]?.line)
-                outputConnectors[i]?.line = null
-                outputConnectors[i]?.to?.line = null
-                val outputParent = outputConnectors[i]?.to?.parent
-                outputConnectors[i]?.to?.to = null
-                outputConnectors[i]?.to = null
+                scene.children.remove(outputConnectors[i].line)
+                outputConnectors[i].line = null
+                outputConnectors[i].to?.line = null
+                val outputParent = outputConnectors[i].to?.parent
+                outputConnectors[i].to?.to = null
+                outputConnectors[i].to = null
                 outputParent?.needUpdate()
             }
             outputConnectors.removeAll { true }
@@ -142,6 +146,21 @@ abstract class BaseNode {
         if (needUpdate)
             update()
         return ans
+    }
+
+    protected fun createAndAddConnector(type: String, isInput: Boolean, index: Int) {
+        val connector = Connector(this, type, isInput, index)
+        if (isInput) {
+            inputConnectors.add(connector)
+
+            inputGrid.addRow(index, connector.connectionDot)
+        } else {
+            outputs.add(null)
+            outputConnectors.add(connector)
+
+            outputGrid.addRow(index,  connector.connectionDot)
+
+        }
     }
 }
 
@@ -180,14 +199,6 @@ class FloatNode : BaseNonImageNode() {
         mainNode.add(content, 0, 1)
     }
 
-    init {
-        val output = Connector(this, FLOAT_TYPE, false, 0)
-        outputs.addAll(arrayOf(null))
-        outputConnectors.add(output)
-
-        outputGrid.addRow(0, output.connectionDot)
-    }
-
     override fun update() {
         ans = try {
             content.text.toFloat()
@@ -198,6 +209,60 @@ class FloatNode : BaseNonImageNode() {
     }
 
     init {
+        createAndAddConnector(FLOAT_TYPE, OUTPUT, 0)
+        update()
+    }
+}
+
+class IntNode : BaseNonImageNode() {
+    override val content = TextField()
+
+    init {
+        title.text = "Int"
+
+        content.textProperty().addListener { _, _, _ ->
+            content.text = content.text.filter { it.isDigit() }
+            needUpdate()
+        }
+
+        mainNode.add(content, 0, 1)
+    }
+
+    override fun update() {
+        ans = try {
+            content.text.toInt()
+        } catch (e: Exception) {
+            0
+        }
+        needUpdate = false
+    }
+
+    init {
+        createAndAddConnector(INT_TYPE, OUTPUT, 0)
+        update()
+    }
+}
+
+class StringNode : BaseNonImageNode() {
+    override val content = TextField()
+
+    init {
+        title.text = "String"
+
+        content.textProperty().addListener { _, _, _, ->
+            needUpdate()
+        }
+
+        mainNode.add(content, 0, 1)
+    }
+
+    override fun update() {
+        ans = content.text
+        needUpdate = false
+    }
+
+    init {
+        createAndAddConnector(STRING_TYPE, OUTPUT, 0)
         update()
     }
 }
@@ -205,16 +270,13 @@ class FloatNode : BaseNonImageNode() {
 class PrintNode : BaseNonImageNode() {
     override val content = Text()
 
-    val testInput: Connector = Connector(this, FLOAT_TYPE, true, 0)
-
     init {
-        inputConnector = testInput
+        createAndAddConnector(STRING_TYPE, INPUT, 0)
         mainNode.add(content, 0, 1)
-        inputGrid.addRow(0, testInput.connectionDot)
     }
 
     override fun update() {
-        ans = testInput.to?.parent?.getData()
+        ans = inputConnectors[0].to?.parent?.getData()
         content.text = ans.toString()
         needUpdate = false
     }

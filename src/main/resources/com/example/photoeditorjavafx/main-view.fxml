@@ -1,31 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 
-<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="800.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.photoeditorjavafx.MainController">
-  <columnConstraints>
-    <ColumnConstraints hgrow="SOMETIMES" prefWidth="955.0" />
-    <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="325.0" />
-  </columnConstraints>
-  <rowConstraints>
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-  </rowConstraints>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.photoeditorjavafx.MainController">
    <children>
-      <ScrollPane fx:id="mainSP" prefHeight="200.0" prefWidth="200.0" scaleShape="false">
-         <content>
-            <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="3000.0" prefWidth="3000.0" stylesheets="@css/style.css">
-               <children>
-                  <Button layoutX="219.0" layoutY="254.0" mnemonicParsing="false" onAction="#createNodesList" text="Button" />
-               </children></AnchorPane>
-         </content></ScrollPane>
-      <ScrollPane fx:id="nodeListSP" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1">
-         <content>
-            <AnchorPane prefHeight="200.0" prefWidth="325.0" />
-         </content></ScrollPane>
+      <MenuBar>
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Close" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Nodes">
+            <items>
+              <MenuItem fx:id="Float" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Float" />
+                  <MenuItem fx:id="Int" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Int" />
+                  <MenuItem fx:id="String" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="String" />
+                  <MenuItem fx:id="Image" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Image" />
+                  <MenuItem fx:id="AddText" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Добавить текст" />
+                  <MenuItem fx:id="AddImage" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Добавить изображение" />
+                  <MenuItem fx:id="GrayFIlter" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Gray FIlter" />
+                  <MenuItem fx:id="Brightness" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Brightness" />
+                  <MenuItem fx:id="Sepia" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Sepia" />
+                  <MenuItem fx:id="InvertFilter" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Invert Filter" />
+                  <MenuItem fx:id="BlurFilter" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Blur Filter" />
+                  <MenuItem fx:id="TransformMove" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Transform Move" />
+                  <MenuItem fx:id="TransformScale" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Transform Scale" />
+                  <MenuItem fx:id="TransformRotate" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Transform Rotate" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <SplitPane dividerPositions="0.75" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1280.0" VBox.vgrow="ALWAYS">
+         <items>
+            <ScrollPane fx:id="mainSP" prefHeight="200.0" prefWidth="200.0" scaleShape="false">
+               <content>
+                  <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="3000.0" prefWidth="3000.0" stylesheets="@css/style.css">
+                     <children>
+                        <Button layoutX="219.0" layoutY="254.0" mnemonicParsing="false" onAction="#createNodesList" text="Button" />
+                     </children>
+                  </AnchorPane>
+               </content>
+            </ScrollPane>
+            <ScrollPane fx:id="nodeListSP" prefHeight="200.0" prefWidth="200.0">
+               <content>
+                  <AnchorPane prefHeight="200.0" prefWidth="325.0" />
+               </content>
+            </ScrollPane>
+         </items>
+      </SplitPane>
    </children>
-</GridPane>
+</VBox>
