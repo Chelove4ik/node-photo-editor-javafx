@@ -8,6 +8,7 @@ import javafx.scene.input.MouseDragEvent
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.GridPane
+import javafx.scene.layout.VBox
 import javafx.scene.text.Text
 
 const val STRING_TYPE: String = "String"
@@ -149,16 +150,21 @@ abstract class BaseNode {
     }
 
     protected fun createAndAddConnector(type: String, isInput: Boolean, index: Int) {
+        val box = VBox()
+        val conType = Text(type)
         val connector = Connector(this, type, isInput, index)
+        box.children.add(conType)
+        box.children.add(connector.connectionDot)
+
         if (isInput) {
             inputConnectors.add(connector)
 
-            inputGrid.addRow(index, connector.connectionDot)
+            inputGrid.addRow(index, box)
         } else {
             outputs.add(null)
             outputConnectors.add(connector)
 
-            outputGrid.addRow(index,  connector.connectionDot)
+            outputGrid.addRow(index, box)
 
         }
     }
