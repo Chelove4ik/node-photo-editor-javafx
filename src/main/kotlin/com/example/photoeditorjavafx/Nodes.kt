@@ -1,15 +1,22 @@
 package com.example.photoeditorjavafx
 
+import javafx.embed.swing.SwingFXUtils
+import javafx.event.EventHandler
 import javafx.fxml.FXML
 import javafx.fxml.FXMLLoader
+import javafx.scene.control.Alert
 import javafx.scene.control.Button
 import javafx.scene.control.TextField
+import javafx.scene.image.Image
+import javafx.scene.image.ImageView
 import javafx.scene.input.MouseDragEvent
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.VBox
 import javafx.scene.text.Text
+import javafx.stage.FileChooser
+import javax.imageio.ImageIO
 
 const val STRING_TYPE: String = "String"
 const val FLOAT_TYPE: String = "Float"
@@ -30,7 +37,7 @@ abstract class BaseNode {
     lateinit var title: Text
 
     @FXML
-    lateinit var removeBtn: Button
+    var removeBtn: Button? = null
 
     @FXML
     lateinit var connectionGrid: GridPane
@@ -48,7 +55,9 @@ abstract class BaseNode {
 
     abstract val content: Any
     var x: Double = 0.0
+        private set
     var y: Double = 0.0
+        private set
 
     var ans: Any? = null
     var needUpdate: Boolean = false
@@ -96,7 +105,7 @@ abstract class BaseNode {
             }
         }
 
-        removeBtn.addEventHandler(MouseEvent.MOUSE_CLICKED) {
+        removeBtn!!.addEventHandler(MouseEvent.MOUSE_CLICKED) {
             val scene = (mainNode.parent as AnchorPane)
 
             for (i in 0 until inputConnectors.size) {
@@ -123,6 +132,15 @@ abstract class BaseNode {
 
             scene.children.remove(this.mainNode)
         }
+    }
+
+    fun setInitX(newX: Double) {
+        x = newX
+        mainNode.layoutX = newX
+    }
+    fun setInitY(newY: Double) {
+        y = newY
+        mainNode.layoutX = newY
     }
 
     abstract fun update()
@@ -179,6 +197,9 @@ abstract class BaseNonImageNode : BaseNode() {
 }
 
 abstract class BaseImageNode : BaseNode() {
+    @FXML
+    override lateinit var content: ImageView
+
     init {
         val fxmlLoader = FXMLLoader(MainApplication::class.java.getResource("image-node.fxml"))
         fxmlLoader.setController(this)
@@ -197,7 +218,7 @@ class FloatNode : BaseNonImageNode() {
             val index = content.text.indexOf('.')
             if (index != -1) {
                 val temp = content.text.replace(".", "")
-                content.text = temp.substring(0, index) + '.' + if (temp.length > index) temp.substring(index) else  ""
+                content.text = temp.substring(0, index) + '.' + if (temp.length > index) temp.substring(index) else ""
             }
             needUpdate()
         }
@@ -255,7 +276,7 @@ class StringNode : BaseNonImageNode() {
     init {
         title.text = "String"
 
-        content.textProperty().addListener { _, _, _, ->
+        content.textProperty().addListener { _, _, _ ->
             needUpdate()
         }
 
@@ -272,6 +293,70 @@ class StringNode : BaseNonImageNode() {
         update()
     }
 }
+
+
+class ImageNode : BaseImageNode() {
+    val contentButton = Button("Open")
+
+    init {
+        title.text = "Image Open"
+
+        contentButton.onAction = EventHandler {
+            val fileChooser = FileChooser()
+            fileChooser.extensionFilters.addAll(
+                FileChooser.ExtensionFilter("All Files", "*.*"),
+                FileChooser.ExtensionFilter("JPG", "*.jpg", "*.jpeg"),
+                FileChooser.ExtensionFilter("PNG", "*.png"),
+            )
+            val file = fileChooser.showOpenDialog(contentButton.scene.window)
+            try {
+                content.image = SwingFXUtils.toFXImage(ImageIO.read(file), null)
+                needUpdate()
+            } catch (e: Exception) {
+                val alert = Alert(Alert.AlertType.ERROR)
+                alert.contentText = e.toString()
+                alert.show()
+            }
+        }
+        connectionGrid.add(contentButton, 1, 0)
+    }
+
+    override fun update() {
+        ans = content.image
+        needUpdate = false
+    }
+
+    init {
+        createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
+        update()
+    }
+}
+
+
+class EndImageNode(private val outputImage: ImageView) : BaseImageNode() {
+
+    init {
+        title.text = "Выходное изображение"
+
+        titleGrid.children.remove(removeBtn)
+        removeBtn = null
+    }
+
+    override fun update() {
+        ans = inputConnectors[0].to?.parent?.getData()
+        content.image = ans as Image?
+        outputImage.image = ans as Image?
+        outputImage.fitWidth = outputImage.image?.width ?: 0.0
+        outputImage.fitHeight = outputImage.image?.height ?: 0.0
+        needUpdate = false
+    }
+
+    init {
+        createAndAddConnector(IMAGE_TYPE, INPUT, 0)
+        update()
+    }
+}
+
 
 class PrintNode : BaseNonImageNode() {
     override val content = Text()

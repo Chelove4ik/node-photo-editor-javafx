@@ -2,6 +2,8 @@ module com.example.photoeditorjavafx {
     requires javafx.controls;
     requires javafx.fxml;
     requires kotlin.stdlib;
+    requires java.desktop;
+    requires javafx.swing;
 
 
     opens com.example.photoeditorjavafx to javafx.fxml;

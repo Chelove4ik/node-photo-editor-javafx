@@ -3,36 +3,30 @@ package com.example.photoeditorjavafx
 import javafx.event.ActionEvent
 import javafx.fxml.FXML
 import javafx.scene.control.MenuItem
-import javafx.scene.control.ScrollPane
+import javafx.scene.image.ImageView
 import javafx.scene.layout.AnchorPane
 
 class MainController {
     @FXML
-    private lateinit var nodeListSP: ScrollPane
+    lateinit var outputImage: ImageView
 
     @FXML
-    lateinit var mainSP: ScrollPane
+    private lateinit var mainAP: AnchorPane
 
-    @FXML
-    private fun createNodesList() {
-        val b = FloatNode()
-        (mainSP.content as AnchorPane).children.add(b.mainNode)
-
-        val c = PrintNode()
-        (mainSP.content as AnchorPane).children.add(c.mainNode)
-    }
+    private val startNode = ImageNode()
+    private lateinit var endNode: EndImageNode
 
     @FXML
     private fun createNodeFromStringIdInEvent(event: ActionEvent) {
         createNodeFromString((event.source as MenuItem).id)
     }
 
-    private fun createNodeFromString(str: String) {
+    private fun createNodeFromString(str: String) : BaseNode? {
         val newNode: BaseNode? = when (str) {
             "Float" -> FloatNode()
             "Int" -> IntNode()
             "String" -> StringNode()
-//            "Image" -> PrintNode()
+            "Image" -> ImageNode()
 //            "AddText" -> PrintNode()
 //            "AddImage" -> PrintNode()
 //            "GrayFIlter" -> PrintNode()
@@ -47,9 +41,24 @@ class MainController {
         }
 
         if (newNode !== null) {
-            (mainSP.content as AnchorPane).children.add(newNode.mainNode)
+            mainAP.children.add(newNode.mainNode)
         } else {
             // TODO мб сообщение об ошибке
         }
+        return newNode
+    }
+
+    @FXML
+    private fun initialize() {
+        startNode.titleGrid.children.remove(startNode.removeBtn)
+        startNode.removeBtn = null
+        startNode.title.text = "Входное изображение"
+
+        endNode = EndImageNode(outputImage)
+
+        endNode.setInitX(300.0)
+
+        mainAP.children.add(startNode.mainNode)
+        mainAP.children.add(endNode.mainNode)
     }
 }
