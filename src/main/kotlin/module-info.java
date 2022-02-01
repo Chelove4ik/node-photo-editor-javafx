@@ -4,6 +4,7 @@ module com.example.photoeditorjavafx {
     requires kotlin.stdlib;
     requires java.desktop;
     requires javafx.swing;
+    requires opencv;
 
 
     opens com.example.photoeditorjavafx to javafx.fxml;

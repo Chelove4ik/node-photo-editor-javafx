@@ -9,14 +9,21 @@ import javafx.scene.control.Button
 import javafx.scene.control.TextField
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
+import javafx.scene.image.WritablePixelFormat
 import javafx.scene.input.MouseDragEvent
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.GridPane
-import javafx.scene.layout.VBox
+import javafx.scene.layout.HBox
 import javafx.scene.text.Text
 import javafx.stage.FileChooser
+import org.opencv.core.*
+import org.opencv.imgcodecs.Imgcodecs
+import org.opencv.imgproc.Imgproc
+import java.io.ByteArrayInputStream
+import java.nio.ByteBuffer
 import javax.imageio.ImageIO
+
 
 const val STRING_TYPE: String = "String"
 const val FLOAT_TYPE: String = "Float"
@@ -138,6 +145,7 @@ abstract class BaseNode {
         x = newX
         mainNode.layoutX = newX
     }
+
     fun setInitY(newY: Double) {
         y = newY
         mainNode.layoutX = newY
@@ -168,23 +176,43 @@ abstract class BaseNode {
     }
 
     protected fun createAndAddConnector(type: String, isInput: Boolean, index: Int) {
-        val box = VBox()
+        val box = HBox()
         val conType = Text(type)
         val connector = Connector(this, type, isInput, index)
-        box.children.add(conType)
-        box.children.add(connector.connectionDot)
 
         if (isInput) {
             inputConnectors.add(connector)
 
+            box.children.add(connector.connectionDot)
+            box.children.add(conType)
             inputGrid.addRow(index, box)
         } else {
             outputs.add(null)
             outputConnectors.add(connector)
 
+            box.children.add(conType)
+            box.children.add(connector.connectionDot)
             outputGrid.addRow(index, box)
 
         }
+    }
+
+    protected fun imageToMat(image: Image): Mat {
+        val width = image.width.toInt()
+        val height = image.height.toInt()
+        val buffer = ByteArray(width * height * 4)
+        val reader = image.pixelReader
+        val format: WritablePixelFormat<ByteBuffer> = WritablePixelFormat.getByteBgraInstance()
+        reader.getPixels(0, 0, width, height, format, buffer, 0, width * 4)
+        val mat = Mat(height, width, CvType.CV_8UC4)
+        mat.put(0, 0, buffer)
+        return mat
+    }
+
+    protected fun matToImage(frame: Mat): Image {
+        val buffer = MatOfByte()
+        Imgcodecs.imencode(".png", frame, buffer)
+        return Image(ByteArrayInputStream(buffer.toArray()))
     }
 }
 
@@ -355,6 +383,51 @@ class EndImageNode(private val outputImage: ImageView) : BaseImageNode() {
         createAndAddConnector(IMAGE_TYPE, INPUT, 0)
         update()
     }
+}
+
+class AddTextNode : BaseImageNode() {
+
+    init {
+        title.text = "Добавить текст"
+    }
+
+    override fun update() {
+        needUpdate = false
+        val inputImg = inputConnectors[0].to?.parent?.getData() as Image?
+        val inputX = inputConnectors[1].to?.parent?.getData() as Int?
+        val inputY = inputConnectors[2].to?.parent?.getData() as Int?
+        val inputStr = inputConnectors[3].to?.parent?.getData() as String?
+
+        if (inputImg === null || inputX === null || inputY === null || inputStr === null) {
+            content.image = null
+            ans = null
+            return
+        }
+
+        val mat = imageToMat(inputImg)
+        Imgproc.putText(
+            mat,
+            inputStr,
+            Point(inputX.toDouble(), inputY.toDouble()),
+            Imgproc.FONT_HERSHEY_SIMPLEX,
+            1.0,
+            Scalar(100.0, 100.0, 100.0, 255.0)
+        )
+        content.image = matToImage(mat)
+        ans = content.image
+    }
+
+    init {
+        createAndAddConnector(IMAGE_TYPE, INPUT, 0)
+        createAndAddConnector(INT_TYPE, INPUT, 1)
+        createAndAddConnector(INT_TYPE, INPUT, 2)
+        createAndAddConnector(STRING_TYPE, INPUT, 3)
+
+        createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
+
+        update()
+    }
+
 }
 
 

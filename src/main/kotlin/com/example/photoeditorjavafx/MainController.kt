@@ -27,7 +27,7 @@ class MainController {
             "Int" -> IntNode()
             "String" -> StringNode()
             "Image" -> ImageNode()
-//            "AddText" -> PrintNode()
+            "AddText" -> AddTextNode()
 //            "AddImage" -> PrintNode()
 //            "GrayFIlter" -> PrintNode()
 //            "Brightness" -> PrintNode()

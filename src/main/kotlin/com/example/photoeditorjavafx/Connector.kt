@@ -4,7 +4,7 @@ import javafx.geometry.Bounds
 import javafx.scene.input.MouseDragEvent
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.GridPane
-import javafx.scene.layout.VBox
+import javafx.scene.layout.HBox
 import javafx.scene.shape.Circle
 import javafx.scene.shape.Line
 
@@ -24,7 +24,7 @@ open class Connector(
     private var deleteOnRelease: Boolean = true
 
     fun getBoundOnScene(): Bounds {
-        val parent1 = connectionDot.parent as VBox
+        val parent1 = connectionDot.parent as HBox
         val parent2 = parent1.parent as GridPane
         val parent3 = parent2.parent as GridPane
         val parent4 = parent3.parent as GridPane

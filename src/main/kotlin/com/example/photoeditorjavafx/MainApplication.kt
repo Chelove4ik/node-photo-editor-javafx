@@ -20,5 +20,6 @@ class MainApplication: Application() {
 }
 
 fun main() {
+    nu.pattern.OpenCV.loadLocally()
     Application.launch(MainApplication::class.java)
 }
