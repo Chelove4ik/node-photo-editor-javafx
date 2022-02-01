@@ -28,7 +28,7 @@ class MainController {
             "String" -> StringNode()
             "Image" -> ImageNode()
             "AddText" -> AddTextNode()
-//            "AddImage" -> PrintNode()
+            "AddImage" -> AddImageNode()
 //            "GrayFIlter" -> PrintNode()
 //            "Brightness" -> PrintNode()
 //            "Sepia" -> PrintNode()

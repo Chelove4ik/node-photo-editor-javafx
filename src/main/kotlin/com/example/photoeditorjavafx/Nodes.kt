@@ -23,6 +23,7 @@ import org.opencv.imgproc.Imgproc
 import java.io.ByteArrayInputStream
 import java.nio.ByteBuffer
 import javax.imageio.ImageIO
+import kotlin.math.max
 
 
 const val STRING_TYPE: String = "String"
@@ -426,6 +427,49 @@ class AddTextNode : BaseImageNode() {
         createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
 
         update()
+    }
+}
+
+class AddImageNode : BaseImageNode() {
+
+    init {
+        title.text = "Добавить изображение"
+    }
+
+    override fun update() {
+        needUpdate = false
+        val inputImg = inputConnectors[0].to?.parent?.getData() as Image?
+        val inputX = inputConnectors[1].to?.parent?.getData() as Int?
+        val inputY = inputConnectors[2].to?.parent?.getData() as Int?
+        val inputAddImg = inputConnectors[3].to?.parent?.getData() as Image?
+
+        if (inputImg === null || inputX === null || inputY === null || inputAddImg === null) {
+            content.image = null
+            ans = null
+            return
+        }
+        val width = max(inputImg.width, inputAddImg.width + inputX).toInt()
+        val height = max(inputImg.height, inputAddImg.height + inputY).toInt()
+
+        val mat = imageToMat(inputImg)
+        val addMat = imageToMat(inputAddImg)
+        val outMat = Mat(height, width, CvType.CV_8UC4)
+
+        mat.copyTo(outMat.rowRange(0, mat.rows()).colRange(0, mat.cols()))
+        addMat.copyTo(outMat.rowRange(inputY, inputY + addMat.rows()).colRange(inputX, inputX + addMat.cols()))
+
+        content.image = matToImage(outMat)
+        ans = content.image
+
+    }
+
+    init {
+        createAndAddConnector(IMAGE_TYPE, INPUT, 0)
+        createAndAddConnector(INT_TYPE, INPUT, 1)
+        createAndAddConnector(INT_TYPE, INPUT, 2)
+        createAndAddConnector(IMAGE_TYPE, INPUT, 3)
+
+        createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
     }
 
 }
