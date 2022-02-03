@@ -12,7 +12,7 @@ open class Connector(
     val parent: BaseNode,
     private val type: String,
     private val isInput: Boolean,
-    private val index: Int
+    val index: Int
 ) {
     companion object StartConnector {
         var startConnector: Connector? = null

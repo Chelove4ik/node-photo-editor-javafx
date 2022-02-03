@@ -21,6 +21,7 @@ import org.opencv.core.*
 import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.nio.ByteBuffer
 import javax.imageio.ImageIO
 import kotlin.math.max
@@ -76,6 +77,7 @@ abstract class BaseNode {
     @FXML
     private fun initialize() {
         mainNode.styleClass.add("node")
+        listOfNodes.add(this)
 
         titleGrid.addEventHandler(MouseDragEvent.MOUSE_PRESSED) {
             pressedX = it.x
@@ -138,6 +140,8 @@ abstract class BaseNode {
             }
             outputConnectors.removeAll { true }
 
+            listOfNodes.remove(this)
+
             scene.children.remove(this.mainNode)
         }
     }
@@ -149,7 +153,7 @@ abstract class BaseNode {
 
     fun setInitY(newY: Double) {
         y = newY
-        mainNode.layoutX = newY
+        mainNode.layoutY = newY
     }
 
     abstract fun update()
@@ -214,6 +218,10 @@ abstract class BaseNode {
         val buffer = MatOfByte()
         Imgcodecs.imencode(".png", frame, buffer)
         return Image(ByteArrayInputStream(buffer.toArray()))
+    }
+
+    companion object {
+        val listOfNodes = mutableListOf<BaseNode>()
     }
 }
 
@@ -324,8 +332,19 @@ class StringNode : BaseNonImageNode() {
 }
 
 
-class ImageNode : BaseImageNode() {
+open class ImageNode : BaseImageNode() {
     val contentButton = Button("Open")
+    var url: String? = null
+        set(value) {
+            field = value
+            try {
+                content.image = SwingFXUtils.toFXImage(ImageIO.read(File(value!!)), null)
+                needUpdate()
+            } catch (e: Exception) {
+                field = null
+                content.image = null
+            }
+        }
 
     init {
         title.text = "Image Open"
@@ -340,6 +359,7 @@ class ImageNode : BaseImageNode() {
             val file = fileChooser.showOpenDialog(contentButton.scene.window)
             try {
                 content.image = SwingFXUtils.toFXImage(ImageIO.read(file), null)
+                url = file.absolutePath
                 needUpdate()
             } catch (e: Exception) {
                 val alert = Alert(Alert.AlertType.ERROR)
@@ -350,7 +370,7 @@ class ImageNode : BaseImageNode() {
         connectionGrid.add(contentButton, 1, 0)
     }
 
-    override fun update() {
+    final override fun update() {
         ans = content.image
         needUpdate = false
     }
@@ -361,6 +381,13 @@ class ImageNode : BaseImageNode() {
     }
 }
 
+class StartImageNode : ImageNode() {
+    init {
+        titleGrid.children.remove(removeBtn)
+        removeBtn = null
+        title.text = "Входное изображение"
+    }
+}
 
 class EndImageNode(private val outputImage: ImageView) : BaseImageNode() {
 
@@ -471,7 +498,6 @@ class AddImageNode : BaseImageNode() {
 
         createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
     }
-
 }
 
 
