@@ -1,6 +1,7 @@
 package com.example.photoeditorjavafx
 
-import javafx.embed.swing.SwingFXUtils
+import javafx.embed.swing.SwingFXUtils.fromFXImage
+import javafx.embed.swing.SwingFXUtils.toFXImage
 import javafx.event.EventHandler
 import javafx.fxml.FXML
 import javafx.fxml.FXMLLoader
@@ -20,11 +21,15 @@ import javafx.stage.FileChooser
 import org.opencv.core.*
 import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
+import java.awt.Color
+import java.awt.geom.AffineTransform
+import java.awt.image.AffineTransformOp
+import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.nio.ByteBuffer
 import javax.imageio.ImageIO
-import kotlin.math.max
+import kotlin.math.*
 
 
 const val STRING_TYPE: String = "String"
@@ -267,7 +272,7 @@ class FloatNode : BaseNonImageNode() {
         ans = try {
             content.text.toFloat()
         } catch (e: Exception) {
-            0.0
+            0.0f
         }
         needUpdate = false
     }
@@ -338,9 +343,10 @@ open class ImageNode : BaseImageNode() {
         set(value) {
             field = value
             try {
-                content.image = SwingFXUtils.toFXImage(ImageIO.read(File(value!!)), null)
+                content.image = toFXImage(ImageIO.read(File(value!!)), null)
                 needUpdate()
             } catch (e: Exception) {
+                println(e)
                 field = null
                 content.image = null
             }
@@ -358,7 +364,7 @@ open class ImageNode : BaseImageNode() {
             )
             val file = fileChooser.showOpenDialog(contentButton.scene.window)
             try {
-                content.image = SwingFXUtils.toFXImage(ImageIO.read(file), null)
+                content.image = toFXImage(ImageIO.read(file), null)
                 url = file.absolutePath
                 needUpdate()
             } catch (e: Exception) {
@@ -390,7 +396,6 @@ class StartImageNode : ImageNode() {
 }
 
 class EndImageNode(private val outputImage: ImageView) : BaseImageNode() {
-
     init {
         title.text = "Выходное изображение"
 
@@ -414,7 +419,6 @@ class EndImageNode(private val outputImage: ImageView) : BaseImageNode() {
 }
 
 class AddTextNode : BaseImageNode() {
-
     init {
         title.text = "Добавить текст"
     }
@@ -458,7 +462,6 @@ class AddTextNode : BaseImageNode() {
 }
 
 class AddImageNode : BaseImageNode() {
-
     init {
         title.text = "Добавить изображение"
     }
@@ -500,22 +503,277 @@ class AddImageNode : BaseImageNode() {
     }
 }
 
-
-class PrintNode : BaseNonImageNode() {
-    override val content = Text()
-
+class GrayFilterNode : BaseImageNode() {
     init {
-        createAndAddConnector(STRING_TYPE, INPUT, 0)
-        mainNode.add(content, 0, 1)
+        title.text = "Gray Filter"
     }
 
     override fun update() {
-        ans = inputConnectors[0].to?.parent?.getData()
-        content.text = ans.toString()
         needUpdate = false
+        val img = inputConnectors[0].to?.parent?.getData() as Image?
+        if (img === null) {
+            content.image = null
+            ans = null
+            return
+        }
+        val mat = imageToMat(img)
+        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGRA2GRAY)
+        content.image = matToImage(mat)
+        ans = content.image
     }
 
     init {
+        createAndAddConnector(IMAGE_TYPE, INPUT, 0)
+        createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
+
+        update()
+    }
+}
+
+class BrightnessNode : BaseImageNode() {
+    init {
+        title.text = "Brightness"
+    }
+
+    override fun update() {
+        needUpdate = false
+        val img = inputConnectors[0].to?.parent?.getData() as Image?
+        val bright = inputConnectors[1].to?.parent?.getData() as Float?
+        if (img === null || bright === null) {
+            content.image = null
+            ans = null
+            return
+        }
+        val mat = imageToMat(img)
+        mat.convertTo(mat, -1, bright.toDouble())
+        content.image = matToImage(mat)
+        ans = content.image
+    }
+
+    init {
+        createAndAddConnector(IMAGE_TYPE, INPUT, 0)
+        createAndAddConnector(FLOAT_TYPE, INPUT, 1)
+
+        createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
+        update()
+    }
+}
+
+class SepiaNode : BaseImageNode() {
+    init {
+        title.text = "Sepia"
+    }
+
+    override fun update() {
+        needUpdate = false
+        val img = inputConnectors[0].to?.parent?.getData() as Image?
+        if (img === null) {
+            content.image = null
+            ans = null
+            return
+        }
+        val mat = imageToMat(img)
+        val kernel = Mat(4, 4, CvType.CV_32F)
+        kernel.put(
+            0, 0,
+            0.272, 0.534, 0.131, 0.0,
+            0.349, 0.686, 0.168, 0.0,
+            0.393, 0.769, 0.189, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        )
+        Core.transform(mat, mat, kernel)
+        content.image = matToImage(mat)
+        ans = content.image
+    }
+
+    init {
+        createAndAddConnector(IMAGE_TYPE, INPUT, 0)
+        createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
+
+        update()
+    }
+}
+
+class InvertFilterNode : BaseImageNode() {
+    init {
+        title.text = "Invert Filter"
+    }
+
+    override fun update() {
+        needUpdate = false
+        val img = inputConnectors[0].to?.parent?.getData() as Image?
+        if (img === null) {
+            content.image = null
+            ans = null
+            return
+        }
+
+        val image = fromFXImage(img, null)
+        for (y in 0 until img.height.toInt()) {
+            for (x in 0 until img.width.toInt()) {
+                val pix: Int = image.getRGB(x, y)
+                var color = Color(pix, true)
+                color = Color(255 - color.red, 255 - color.green, 255 - color.blue)
+                image.setRGB(x, y, color.rgb)
+            }
+        }
+
+        content.image = toFXImage(image, null)
+        ans = content.image
+    }
+
+    init {
+        createAndAddConnector(IMAGE_TYPE, INPUT, 0)
+        createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
+
+        update()
+    }
+}
+
+class BlurFilterNode : BaseImageNode() {
+    init {
+        title.text = "Blur Filter"
+    }
+
+    override fun update() {
+        needUpdate = false
+        val img = inputConnectors[0].to?.parent?.getData() as Image?
+        val kernelSize = inputConnectors[1].to?.parent?.getData() as Int?
+        if (img === null || kernelSize === null || kernelSize % 2 == 0) {
+            content.image = null
+            ans = null
+            return
+        }
+        val mat = imageToMat(img)
+        Imgproc.GaussianBlur(mat, mat, Size(kernelSize.toDouble(), kernelSize.toDouble()), 0.0)
+        content.image = matToImage(mat)
+        ans = content.image
+    }
+
+    init {
+        createAndAddConnector(IMAGE_TYPE, INPUT, 0)
+        createAndAddConnector(INT_TYPE, INPUT, 1)
+
+        createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
+
+        update()
+    }
+}
+
+class TransformMoveNode : BaseImageNode() {
+    init {
+        title.text = "Transform Move"
+    }
+
+    override fun update() {
+        needUpdate = false
+        val inputImg = inputConnectors[0].to?.parent?.getData() as Image?
+        val inputX = inputConnectors[1].to?.parent?.getData() as Float?
+        val inputY = inputConnectors[2].to?.parent?.getData() as Float?
+        if (inputImg === null || inputX === null || inputY == null) {
+            content.image = null
+            ans = null
+            return
+        }
+
+        val width = (inputImg.width + inputX).toInt()
+        val height = (inputImg.height + inputY).toInt()
+
+        val mat = imageToMat(inputImg)
+        val outMat = Mat(height, width, CvType.CV_8UC4)
+
+        mat.copyTo(
+            outMat.rowRange(
+                inputY.toInt(), mat.rows() + inputY.toInt()
+            ).colRange(inputX.toInt(), mat.cols() + inputX.toInt())
+        )
+
+        content.image = matToImage(outMat)
+        ans = content.image
+    }
+
+    init {
+        createAndAddConnector(IMAGE_TYPE, INPUT, 0)
+        createAndAddConnector(FLOAT_TYPE, INPUT, 1)
+        createAndAddConnector(FLOAT_TYPE, INPUT, 2)
+
+        createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
+
+        update()
+    }
+}
+
+class TransformScaleNode : BaseImageNode() {
+    init {
+        title.text = "Transform Scale"
+    }
+
+    override fun update() {
+        needUpdate = false
+        val img = inputConnectors[0].to?.parent?.getData() as Image?
+        val x = inputConnectors[1].to?.parent?.getData() as Float?
+        val y = inputConnectors[2].to?.parent?.getData() as Float?
+        if (img === null || x === null || y == null || x <= 0 || y <= 0) {
+            content.image = null
+            ans = null
+            return
+        }
+        val mat = imageToMat(img)
+
+        Imgproc.resize(mat, mat, Size(), x.toDouble(), y.toDouble())
+
+        content.image = matToImage(mat)
+        ans = content.image
+    }
+
+    init {
+        createAndAddConnector(IMAGE_TYPE, INPUT, 0)
+        createAndAddConnector(FLOAT_TYPE, INPUT, 1)
+        createAndAddConnector(FLOAT_TYPE, INPUT, 2)
+
+        createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
+
+        update()
+    }
+}
+
+class TransformRotateNode : BaseImageNode() {
+    init {
+        title.text = "Transform Rotate"
+    }
+
+    override fun update() {
+        needUpdate = false
+        val img = inputConnectors[0].to?.parent?.getData() as Image?
+        val rad = inputConnectors[1].to?.parent?.getData() as Float?
+        if (img === null || rad === null) {
+            content.image = null
+            ans = null
+            return
+        }
+        val tempImg = fromFXImage(img, null)
+        val sin = abs(sin(rad.toDouble()))
+        val cos = abs(cos(rad.toDouble()))
+        val w = floor(tempImg.width * cos + tempImg.height * sin).toInt()
+        val h = floor(tempImg.height * cos + tempImg.width * sin).toInt()
+        val rotatedImage = BufferedImage(w, h, tempImg.type)
+        val at = AffineTransform()
+        at.translate((w / 2).toDouble(), (h / 2).toDouble())
+        at.rotate(rad.toDouble(), 0.0, 0.0)
+        at.translate(-tempImg.width.toDouble() / 2, -tempImg.height.toDouble() / 2)
+        val rotateOp = AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR)
+        rotateOp.filter(tempImg, rotatedImage)
+
+        content.image = toFXImage(rotatedImage, null)
+        ans = content.image
+    }
+
+    init {
+        createAndAddConnector(IMAGE_TYPE, INPUT, 0)
+        createAndAddConnector(FLOAT_TYPE, INPUT, 1)
+
+        createAndAddConnector(IMAGE_TYPE, OUTPUT, 0)
+
         update()
     }
 }

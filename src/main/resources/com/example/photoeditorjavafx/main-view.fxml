@@ -17,7 +17,6 @@
             <items>
                   <MenuItem mnemonicParsing="false" onAction="#saveNodesToFile" text="Save" />
                   <MenuItem mnemonicParsing="false" onAction="#createNodesFromFile" text="Load" />
-              <MenuItem mnemonicParsing="false" text="Close" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="Nodes">
@@ -28,7 +27,7 @@
                   <MenuItem fx:id="Image" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Image" />
                   <MenuItem fx:id="AddText" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Добавить текст" />
                   <MenuItem fx:id="AddImage" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Добавить изображение" />
-                  <MenuItem fx:id="GrayFIlter" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Gray FIlter" />
+                  <MenuItem fx:id="GrayFilter" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Gray Filter" />
                   <MenuItem fx:id="Brightness" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Brightness" />
                   <MenuItem fx:id="Sepia" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Sepia" />
                   <MenuItem fx:id="InvertFilter" mnemonicParsing="false" onAction="#createNodeFromStringIdInEvent" text="Invert Filter" />

@@ -190,14 +190,14 @@ class MainController {
             is ImageNode -> "Image"
             is AddTextNode -> "AddText"
             is AddImageNode -> "AddImage"
-//            is GrayFIlterNode -> "GrayFIlter"
-//            is BrightnessNode -> "Brightness"
-//            is SepiaNode -> "Sepia"
-//            is InvertFilterNode -> "InvertFilter"
-//            is BlurFilterNode -> "BlurFilter"
-//            is TransformMoveNode -> "TransformMove"
-//            is TransformScaleNode -> "TransformScale"
-//            is TransformRotateNode -> "TransformRotate"
+            is GrayFilterNode -> "GrayFilter"
+            is BrightnessNode -> "Brightness"
+            is SepiaNode -> "Sepia"
+            is InvertFilterNode -> "InvertFilter"
+            is BlurFilterNode -> "BlurFilter"
+            is TransformMoveNode -> "TransformMove"
+            is TransformScaleNode -> "TransformScale"
+            is TransformRotateNode -> "TransformRotate"
             is EndImageNode -> "EndImage"
             else -> throw Exception("unknown node")
         }
@@ -210,14 +210,14 @@ class MainController {
             "Image" -> ImageNode()
             "AddText" -> AddTextNode()
             "AddImage" -> AddImageNode()
-//            "GrayFIlter" -> PrintNode()
-//            "Brightness" -> PrintNode()
-//            "Sepia" -> PrintNode()
-//            "InvertFilter" -> PrintNode()
-//            "BlurFilter" -> PrintNode()
-//            "TransformMove" -> PrintNode()
-//            "TransformScale" -> PrintNode()
-            "TransformRotate" -> PrintNode()
+            "GrayFilter" -> GrayFilterNode()
+            "Brightness" -> BrightnessNode()
+            "Sepia" -> SepiaNode()
+            "InvertFilter" -> InvertFilterNode()
+            "BlurFilter" -> BlurFilterNode()
+            "TransformMove" -> TransformMoveNode()
+            "TransformScale" -> TransformScaleNode()
+            "TransformRotate" -> TransformRotateNode()
             "StartImage" -> StartImageNode()
             "EndImage" -> EndImageNode(outputImage)
             else -> throw Exception("unknown node")
